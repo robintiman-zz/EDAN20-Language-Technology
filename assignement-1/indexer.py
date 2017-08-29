@@ -11,24 +11,6 @@ similarity.
 Usage: <fill in>
 """
 
-def main():
-    folder = sys.argv[0]
-
-    # Using a dictionary with the word as key and all the corresponding indices as value.
-    indices = {}
-
-
-def find_words(text):
-    words = re.finditer(r"\w", text)
-    print(words.groups())
-
-def write_to_file(indices, file):
-    """
-    Writes a dict to file using pickle. 
-    :param indices: The dict to write from. 
-    """
-    pickle.dump(indices, open(file, "wb"))
-
 
 def get_files(dir, suffix):
     """
@@ -42,3 +24,54 @@ def get_files(dir, suffix):
         if file.endswith(suffix):
             files.append(file)
     return files
+
+def find_words(file):
+    """
+    Finds the indices of each word in a given file.
+    :param file: A text file
+    :return: A dict with the word as key and its indices in a list as value. 
+    """
+    words = re.finditer(r"\w+", open("Selma/" + file, "r").read())
+    indices = {}
+    for word in words:
+        w = word.group()
+        if w in indices:
+            indices[w].append(word.start())
+        else:
+            indices[w] = [word.start()]
+    return indices
+
+def create_master(indices):
+    words = {word for d in indices for word in d[0]}
+    master = {}
+    for word in words:
+        word_indices = {}
+        for d in indices:
+            try:
+                word_indices[d[1]] = d[0][word]
+            except KeyError:
+                continue
+        master[word] = word_indices
+    return master
+
+def main():
+    folder = sys.argv[0]
+    files = get_files("Selma", "txt")
+    indices = []
+    for file in files:
+        words = find_words(file)
+        write_to_file(words, file)
+        indices.append((words, file))
+
+    master = create_master(indices)
+    write_to_file(master, "master.idx")
+
+def write_to_file(d, file):
+    """
+    Writes a dict to file using pickle. 
+    :param d: The dict to write from. 
+    """
+    pickle.dump(d, open(file, "wb"))
+
+main()
+
