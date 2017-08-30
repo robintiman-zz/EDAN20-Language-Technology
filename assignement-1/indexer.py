@@ -54,17 +54,17 @@ def create_master(indices):
         master[word] = word_indices
     return master
 
-def main():
-    folder = sys.argv[0]
-    files = get_files("Selma", "txt")
+def indexer():
+    folder = sys.argv[1]
+    files = get_files(folder, "txt")
     indices = []
     for file in files:
         words = find_words(file)
-        write_to_file(words, file)
+        write_to_file(words, file.replace("txt", "idx"))
         indices.append((words, file))
-
     master = create_master(indices)
     write_to_file(master, "master.idx")
+    print("Success!")
 
 def write_to_file(d, file):
     """
@@ -73,5 +73,4 @@ def write_to_file(d, file):
     """
     pickle.dump(d, open(file, "wb"))
 
-main()
-
+indexer()
