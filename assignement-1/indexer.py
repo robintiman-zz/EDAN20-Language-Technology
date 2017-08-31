@@ -55,7 +55,8 @@ def create_master(indices):
     return master
 
 def indexer():
-    folder = sys.argv[1]
+    # folder = sys.argv[1]
+    folder = "Selma"
     files = get_files(folder, "txt")
     indices = []
     for file in files:
