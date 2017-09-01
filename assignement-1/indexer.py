@@ -34,7 +34,7 @@ def find_words(file):
     words = re.finditer(r"\w+", open("Selma/" + file, "r").read())
     indices = {}
     for word in words:
-        w = word.group()
+        w = word.group().lower()
         if w in indices:
             indices[w].append(word.start())
         else:

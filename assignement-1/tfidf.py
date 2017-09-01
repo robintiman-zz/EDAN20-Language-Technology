@@ -19,10 +19,6 @@ def tfidf(times_word, total_terms, total_documents, documents_with_word):
     return tf * idf
 
 
-def get_constants():
-    files = get_files(".", "idx")
-
-
 def vectorizer():
     """
     For each key (N) in master. Calculate the tf-idf for that word in each document.
@@ -32,20 +28,29 @@ def vectorizer():
     master = load_dicts("master.idx")
     files = get_files(".", "idx")
     files.remove("master.idx") # Don't need it
-    dicts = {file : load_dicts(file) for file in files}
-    vectors = {file : [0] * len(master) for file in files}
-    del files
-    i = 0
+    dicts = {file.replace("idx", "txt") : load_dicts(file) for file in files}
+    vectors = {file.replace("idx", "txt") : {} for file in files}
+    total_documents = len(dicts)
+    total_terms = {}
+    for doc in dicts:
+        words = dicts[doc]
+        total = sum([len(d) for d in list(words.values())])
+        total_terms[doc] = total
+
     for word in master:
         doc_dict = master[word]
-        for doc in doc_dict:
-            times_word = len(doc_dict[doc])
-            total_terms = len(dicts[doc])
-            total_documents = len(dicts)
-            documents_with_word = len(doc_dict)
-            vectors[doc][i] = tfidf(times_word, total_terms, total_documents,
-                                    documents_with_word)
-        i += 1
-
+        documents_with_word = len(doc_dict)
+        for doc in dicts:
+            try:
+                times_word = len(doc_dict[doc])
+            except KeyError:
+                times_word = 0
+            if doc == "jerusalem.txt" and word == "nils":
+                print("")
+            vectors[doc][word] = tfidf(times_word, total_terms[doc], total_documents,
+                                       documents_with_word)
+    print("Vectorized!")
+    results = [vectors[doc]["nils"] for doc in ["bannlyst.txt", "herrgard.txt", "jerusalem.txt", "nils.txt"]]
+    print(results)
 
 vectorizer()
