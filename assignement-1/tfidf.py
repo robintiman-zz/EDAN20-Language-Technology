@@ -70,8 +70,14 @@ def cosine_similarity(vectors):
             doc_i = list(vectors[docs[i]].values())
             doc_j = list(vectors[docs[j]].values())
             S[i, j] = S[j, i] =  1 - cosine(doc_i, doc_j)
-    index = np.unravel_index(np.argmax(S), dims=(length, length))
-    print("{0} and {1} are most similar".format(docs[index[0]], docs[index[1]]))
-
+    index = list(np.argsort(S, axis=None))
+    np.set_printoptions(5, suppress=True)
+    print(S)
+    print("The most similar are:")
+    j = 1
+    for i in range(len(index)-1, length, -2):
+        doc_index = np.unravel_index(index[i], (length, length))
+        print("{}. {} and {}".format(j, docs[doc_index[0]], docs[doc_index[1]]))
+        j += 1
 
 cosine_similarity(vectorizer())
