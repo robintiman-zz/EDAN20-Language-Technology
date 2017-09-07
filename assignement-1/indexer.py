@@ -8,7 +8,7 @@ Assignment 1 in EDAN20 Language Technology at LTH.
 A document comparator using the TF-IDF representation of each document to determine their
 similarity. 
 
-Usage: <fill in>
+Usage: python indexer.py Selma
 """
 
 
@@ -55,8 +55,7 @@ def create_master(indices):
     return master
 
 def indexer():
-    # folder = sys.argv[1]
-    folder = "Selma"
+    folder = sys.argv[1]
     files = get_files(folder, "txt")
     indices = []
     for file in files:
@@ -65,7 +64,7 @@ def indexer():
         indices.append((words, file))
     master = create_master(indices)
     write_to_file(master, "master.idx")
-    print("Success!")
+    print("{} words indexed!".format(len(master)))
 
 def write_to_file(d, file):
     """
