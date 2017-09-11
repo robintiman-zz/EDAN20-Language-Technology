@@ -53,8 +53,9 @@ def tokenize4(text):
 
 
 if __name__ == '__main__':
-    file = open(sys.argv[1], encoding="utf8")
-    text = file.read()
+    # file = open(sys.argv[1], encoding="utf8")
+    # text = file.read()
+    text = sys.stdin.read()
     """words = tokenize(text)
     for word in words:
         print(word)

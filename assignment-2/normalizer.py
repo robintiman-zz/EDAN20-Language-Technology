@@ -1,13 +1,24 @@
 import regex as re
+from get_files import get_files
 
-def split_into_sentences(text):
-    # Regex (?<!Mrs)(?<!Mr)(\.|\?|!)
-    return re.split(r"(?<!Mr)(?<!Mrs)[\.\?!\”]\s+(?=[A-Z])", text)
+def normalize(text):
+    sentences = re.split("(?<!Mr)(?<!Mrs)[\.\?!\”]\s+(?=[A-Z])", text)
+    normalized = ""
+    for sentence in sentences:
+        sentence = re.sub("[[:punct:]]", "", sentence).lower()
+        normalized += "<s> {} </s>".format(sentence)
+    return normalized
 
-def preprocess(text):
-    pass
+files = get_files(".", ".txt")
+books = {}
+for file in files:
+    text = open(file).read()
+    sentences = normalize(text)
+    books[file] = sentences
 
-file = open("Book 1 - The Philosopher's Stone_djvu.txt", encoding="utf8")
-text = file.read()
-print(split_into_sentences(text))
+print(books)
+
+
+
+
 
