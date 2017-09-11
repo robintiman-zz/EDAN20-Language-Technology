@@ -1,5 +1,5 @@
 import sys
-import re
+import regex as re
 import pickle
 import os
 

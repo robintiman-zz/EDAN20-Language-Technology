@@ -3,7 +3,7 @@ import math
 from indexer import get_files
 from scipy.spatial.distance import cosine
 import numpy as np
-from texttable import Texttable
+# from texttable import Texttable
 
 """
 TF(t) = (Number of times term t appears in a document) / (Total number of terms in the document)
@@ -73,7 +73,7 @@ def cosine_similarity(vectors):
             S[i, j] = S[j, i] =  1 - cosine(doc_i, doc_j)
     index = list(np.argsort(S, axis=None))
     np.set_printoptions(5, suppress=True)
-    print_matrix(S, docs)
+    # print_matrix(S, docs)
     print("The most similar are:")
     j = 1
     for i in range(len(index)-1, length, -2):
