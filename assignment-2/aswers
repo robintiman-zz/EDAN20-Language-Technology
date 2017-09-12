@@ -1,0 +1,12 @@
+Counting unigrams and bigrams
+2. 
+Unigrams 23179
+Bigrams 323535
+
+The possible number of bigrams are (23179 choose 2) = 268.621.431
+For 4-gram it is (23719 choose 4) = 12.024.170.207.675.626
+
+
+
+
+
