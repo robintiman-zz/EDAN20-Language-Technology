@@ -10,13 +10,12 @@ def normalize(text):
     return normalized
 
 files = get_files(".", ".txt")
-books = {}
 for file in files:
-    text = open(file).read()
-    sentences = normalize(text)
-    books[file] = sentences
+    text = open(file, encoding="utf8").read()
+    normalized_text = normalize(text)
+    f = open("normalized-harry.txt", "a")
+    f.write(normalized_text)
 
-print(books)
 
 
 
