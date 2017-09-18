@@ -9,6 +9,7 @@ def tokenize(text):
 
 def count_unigrams(words):
     frequency = {}
+    print(len(words))
     for word in words:
         if word in frequency:
             frequency[word] += 1
@@ -20,6 +21,7 @@ def count_bigrams(words):
     bigrams = [tuple(words[inx:inx + 2])
                for inx in range(len(words) - 1)]
     frequencies = {}
+    print(len(bigrams))
     for bigram in bigrams:
         if bigram in frequencies:
             frequencies[bigram] += 1
@@ -27,7 +29,7 @@ def count_bigrams(words):
             frequencies[bigram] = 1
     return frequencies
 
-text = sys.stdin.read().lower()
+text = open("normalized-harry.txt", "r").read()
 words = tokenize(text)
 uni = count_unigrams(words)
 bi = count_bigrams(words)

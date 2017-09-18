@@ -2,7 +2,7 @@ import regex as re
 from get_files import get_files
 
 def normalize(text):
-    sentences = re.split("(?<!Mr)(?<!Mrs)[\.\?!\”]\s+(?=[A-Z])", text)
+    sentences = re.split("(?<!Mr)(?<!Mrs)[\.\?!\”]\s+(?=[\p{Lu}])", text)
     normalized = ""
     for sentence in sentences:
         sentence = re.sub("[[:punct:]]", "", sentence).lower()
