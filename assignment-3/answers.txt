@@ -1,8 +1,14 @@
 Answers
 
+
+
 Baseline
+
 1. 
+
 Simple and easy to understand. It builds upon the idea that there is a correlation between POS and chunks. The first thing I would do to confirm this is to plot it in a chart. That makes it easily verifiable to see if such a correlation exists. 
+
+
 
 2. 
 processed 47377 tokens with 23852 phrases; found: 26992 phrases; correct: 19592.
@@ -19,4 +25,11 @@ accuracy:  77.29%; precision:  72.58%; recall:  82.14%; FB1:  77.07
                VP: precision:  60.53%; recall:  74.22%; FB1:  66.68  5711
 
 
+
+
+Machine learning 
+1. No, we don't use the two previous chunk tags. 
+2. 0.95
+3. 0.92
+4. Logistic regression. Random forest (0.93). 
 
