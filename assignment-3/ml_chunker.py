@@ -9,6 +9,8 @@ from sklearn.feature_extraction import DictVectorizer
 from sklearn import svm
 from sklearn import linear_model
 from sklearn import metrics
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn import tree
 from sklearn.naive_bayes import GaussianNB
 from sklearn.grid_search import GridSearchCV
@@ -62,9 +64,11 @@ def extract_features_sent(sentence, w_size, feature_names):
     # y is the list of classes
     X = list()
     y = list()
+    feature_line = list()
     for i in range(len(padded_sentence) - 2 * w_size):
         # x is a row of X
         x = list()
+        feature_line = list()
         # The words in lower case
         for j in range(2 * w_size + 1):
             x.append(padded_sentence[i + j][0].lower())
@@ -72,10 +76,8 @@ def extract_features_sent(sentence, w_size, feature_names):
         for j in range(2 * w_size + 1):
             x.append(padded_sentence[i + j][1])
         # The chunks (Up to the word)
-        """
         for j in range(w_size):
-            feature_line.append(padded_sentence[i + j][2])
-        """
+            x.append(padded_sentence[i + j][2])
         # We represent the feature vector as a dictionary
         X.append(dict(zip(feature_names, x)))
         # The classes are stored in a list
@@ -124,30 +126,40 @@ def encode_classes(y_symbols):
 
 
 def predict(test_sentences, feature_names, f_out):
+    c1 = 'BOS'
+    c2 = 'BOS'
     for test_sentence in test_sentences:
         X_test_dict, y_test_symbols = extract_features_sent(test_sentence, w_size, feature_names)
         # Vectorize the test sentence and one hot encoding
-        X_test = vec.transform(X_test_dict)
-        # Predicts the chunks and returns numbers
-        y_test_predicted = classifier.predict(X_test)
-        # Converts to chunk names
-        y_test_predicted_symbols = list(dict_classes[i] for i in y_test_predicted)
-        # Appends the predicted chunks as a last column and saves the rows
-        rows = test_sentence.splitlines()
-        rows = [rows[i] + ' ' + y_test_predicted_symbols[i] for i in range(len(rows))]
-        for row in rows:
-            f_out.write(row + '\n')
-        f_out.write('\n')
-    f_out.close()
+        for row in X_test_dict:
+
+            row["c1"] = c1
+            row["c2"] = c2
+
+            X_test = vec.transform(row)
+            # Predicts the chunks and returns numbers
+            y_test_predicted = classifier.predict(X_test)
+            # Converts to chunk names
+            y_test_predicted_symbols = list(dict_classes[i] for i in y_test_predicted)
+            c2 = c1
+            c1 = y_test_predicted_symbols[0]
+            # Appends the predicted chunks as a last column and saves the rows
+            rows = test_sentence.splitlines()
+            rows = [rows[i] + ' ' + y_test_predicted_symbols[i] for i in range(len(rows))]
+            for row in rows:
+                print(row)
+                f_out.write(row + '\n')
+            f_out.write('\n')
+        f_out.close()
 
 
 if __name__ == '__main__':
     start_time = time.clock()
-    train_corpus = '../../corpus/conll2000/train.txt'
-    test_corpus = '../../corpus/conll2000/test.txt'
+    train_corpus = 'train.txt'
+    test_corpus = 'test.txt'
     w_size = 2  # The size of the context window to the left and right of the word
     feature_names = ['word_n2', 'word_n1', 'word', 'word_p1', 'word_p2',
-                     'pos_n2', 'pos_n1', 'pos', 'pos_p1', 'pos_p2']
+                    'pos_n2', 'pos_n1', 'pos', 'pos_p1', 'pos_p2', "c1", "c2"]
 
     train_sentences = conll_reader.read_sentences(train_corpus)
 
@@ -167,6 +179,8 @@ if __name__ == '__main__':
     training_start_time = time.clock()
     print("Training the model...")
     classifier = linear_model.LogisticRegression(penalty='l2', dual=True, solver='liblinear')
+    # classifier = KNeighborsClassifier()
+    # classifier = RandomForestClassifier()
     model = classifier.fit(X, y)
     print(model)
 
