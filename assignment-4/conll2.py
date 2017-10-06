@@ -54,7 +54,6 @@ def split_rows(sentences, column_names):
         new_sentences.append(sentence)
     return new_sentences
 
-
 def save(file, formatted_corpus, column_names):
     f_out = open(file, 'w')
     for sentence in formatted_corpus:
@@ -75,19 +74,22 @@ def save(file, formatted_corpus, column_names):
 
 def pairs(new_sentences):
     pairs = {}
+    verb_line = {}
     for sentence in new_sentences:
         for line in sentence:
-            if line['deprel'] == 'SS':
-                verb_id = int(line['head'])
-                verb_line = sentence[verb_id]
-                key = (line['form'].lower(), verb_line['form'].lower())
-                if key in pairs:
-                    pairs[key] += 1
-                else:
-                    pairs[key] = 1
+            if '-' not in line:
+                if line['deprel'] == 'SS' or line['deprel'] == 'nsubj':
+                    verb_id = int(line['head'])
+                    verb_line = sentence[verb_id]
+                    key = (line['form'].lower(), verb_line['form'].lower())
+                    if key in pairs:
+                        pairs[key] += 1
+                    else:
+                        pairs[key] = 1
 
 
     return pairs
+
 
 def triplets(sentences):
     triplets = {}
@@ -97,11 +99,13 @@ def triplets(sentences):
         verb_id_objects = []
         verb_id_subjects = []
         for line in sentence:
-            if line['deprel'] == 'OO':
-                verb_id_objects.append((line['head'], line['form']))
+            if '-' not in line:
 
-            if line['deprel'] == 'SS':
-                verb_id_subjects.append((line['head'], line['form']))
+                if line['deprel'] == 'OO' or line['deprel'] == 'obj':
+                    verb_id_objects.append((line['head'], line['form']))
+
+                if line['deprel'] == 'SS' or line['deprel'] == 'nsubj':
+                    verb_id_subjects.append((line['head'], line['form']))
 
         for verb_id_object in verb_id_objects:
             for verb_id_subject in verb_id_subjects:
@@ -122,16 +126,28 @@ if __name__ == '__main__':
     test_file = 'talbanken.txt'
     sentences = read_sentences(test_file)
     new_sentences = split_rows(sentences, column_names_2006)
-    stats = os.stat('talbanken.txt')
-    pairs = pairs(new_sentences)
-    triplets = triplets(new_sentences)
-    pairs = collections.Counter(pairs)
-    triplets = collections.Counter(triplets)
-    print("Totalt antal SS in corpus: {0}".format(sum(pairs.values())))
-    print("Most common pairs: {0}".format(pairs.most_common(5)))
-    print("Totalt antal OO in corpus: {0}".format(sum(triplets.values())))
-    print("Most common triplets: {0}".format(triplets.most_common(5)))
+    pairs_in_corpus = pairs(new_sentences)
+    triplets_in_corpus = triplets(new_sentences)
+    pairs_in_corpus = collections.Counter(pairs_in_corpus)
+    triplets_in_corpus = collections.Counter(triplets_in_corpus)
+    print("Totalt antal pairs in corpus: {0}".format(sum(pairs_in_corpus.values())))
+    print("Most common pairs: {0}\n".format(pairs_in_corpus.most_common(5)))
+    print("Totalt antal triplets in corpus: {0}".format(sum(triplets_in_corpus.values())))
+    print("Most common triplets: {0}\n".format(triplets_in_corpus.most_common(5)))
 
+    test_files_int = get_files('corpus', 'train.conllu')
+    for file in test_files_int:
+        pairs_in_corpus = None
+        sentences = read_sentences(file)
+        new_sentences = split_rows(sentences, column_names_2006)
+        pairs_in_corpus = pairs(new_sentences)
+        triplets_in_corpus = triplets(new_sentences)
+        pairs_in_corpus = collections.Counter(pairs_in_corpus)
+        triplets_in_corpus = collections.Counter(triplets_in_corpus)
+        print("Totalt antal pairs in corpus {0}: {1}".format(file, sum(pairs_in_corpus.values())))
+        print("Most common pairs: {0}\n".format(pairs_in_corpus.most_common(5)))
+        print("Totalt antal triplets in corpus {0}: {1}".format(file, sum(triplets_in_corpus.values())))
+        print("Most common triplets: {0}\n".format(triplets_in_corpus.most_common(5)))
 
 
 
