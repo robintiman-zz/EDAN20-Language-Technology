@@ -129,6 +129,7 @@ def predict(test_sentences, feature_names, f_out):
     c1 = 'BOS'
     c2 = 'BOS'
     for test_sentence in test_sentences:
+        y_test_predicted_symbols = []
         X_test_dict, y_test_symbols = extract_features_sent(test_sentence, w_size, feature_names)
         # Vectorize the test sentence and one hot encoding
         for row in X_test_dict:
@@ -140,17 +141,18 @@ def predict(test_sentences, feature_names, f_out):
             # Predicts the chunks and returns numbers
             y_test_predicted = classifier.predict(X_test)
             # Converts to chunk names
-            y_test_predicted_symbols = list(dict_classes[i] for i in y_test_predicted)
+            y_test_predicted_symbol = dict_classes[y_test_predicted[0]]
             c2 = c1
-            c1 = y_test_predicted_symbols[0]
+            c1 = y_test_predicted_symbol
+            y_test_predicted_symbols.append(y_test_predicted_symbol)
             # Appends the predicted chunks as a last column and saves the rows
-            rows = test_sentence.splitlines()
-            rows = [rows[i] + ' ' + y_test_predicted_symbols[i] for i in range(len(rows))]
-            for row in rows:
-                print(row)
-                f_out.write(row + '\n')
-            f_out.write('\n')
-        f_out.close()
+        rows = test_sentence.splitlines()
+        rows = [rows[i] + ' ' + y_test_predicted_symbols[i] for i in range(len(rows))]
+        for row in rows:
+            print(row)
+            f_out.write(row + '\n')
+        f_out.write('\n')
+    f_out.close()
 
 
 if __name__ == '__main__':
