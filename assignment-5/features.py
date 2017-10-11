@@ -14,8 +14,8 @@ def extract(stack, queue, graph, feature_names, sentence):
         except IndexError:
             features.append("nil")
 
-    features.append(transition.can_reduce(stack, graph))
-    features.append(transition.can_leftarc(stack, graph))
+    features['can_reduce'] = str(transition.can_reduce(stack, graph))
+    features['can_leftarc'] = str(transition.can_leftarc(stack, graph))
     return features
 
 train_file = 'swedish_talbanken05_train.conll'

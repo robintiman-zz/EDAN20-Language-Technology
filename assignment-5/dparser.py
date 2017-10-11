@@ -3,8 +3,16 @@ Gold standard parser
 """
 __author__ = "Pierre Nugues"
 
+
+from sklearn import preprocessing
+from sklearn.feature_extraction import DictVectorizer
+from sklearn import linear_model
+from sklearn import metrics
+
+import features
 import transition
 import conll
+
 
 
 def reference(stack, queue, graph):
@@ -43,17 +51,20 @@ def reference(stack, queue, graph):
     stack, queue, graph = transition.shift(stack, queue, graph)
     return stack, queue, graph, 'sh'
 
-
-if __name__ == '__main__':
-    train_file = 'swedish_talbanken05_train.conll'
-    test_file = 'swedish_talbanken05_test_blind.conll'
+def calc(file):
     column_names_2006 = ['id', 'form', 'lemma', 'cpostag', 'postag', 'feats', 'head', 'deprel', 'phead', 'pdeprel']
     column_names_2006_test = ['id', 'form', 'lemma', 'cpostag', 'postag', 'feats']
+
+    feature_names = [("stack", 0, "postag"), ("stack", 1, "postag"), ("stack", 0, "form"), ("stack", 1, "form"),
+                     ("queue", 0, "postag"), ("queue", 1, "postag"), ("queue", 0, "form"), ("queue", 1, "form")]
+    # "can_re", "can_la"]
 
     sentences = conll.read_sentences(train_file)
     formatted_corpus = conll.split_rows(sentences, column_names_2006)
 
     sent_cnt = 0
+    X_dict = []
+    y_dict = []
     for sentence in formatted_corpus:
         sent_cnt += 1
         if sent_cnt % 1000 == 0:
@@ -67,13 +78,46 @@ if __name__ == '__main__':
         graph['deprels']['0'] = 'ROOT'
         transitions = []
         while queue:
+            feat = features.extract(stack, queue, graph, feature_names, sentence)
             stack, queue, graph, trans = reference(stack, queue, graph)
             transitions.append(trans)
+
+            X_dict.append(feat)
+            y_dict.append(trans)
+
         stack, graph = transition.empty_stack(stack, graph)
         print('Equal graphs:', transition.equal_graphs(sentence, graph))
 
         # Poorman's projectivization to have well-formed graphs.
         for word in sentence:
             word['head'] = graph['heads'][word['id']]
-        print(transitions)
-        print(graph)
+       # print(transitions)
+       # print(graph)
+    return X_dict, y_dict
+
+
+if __name__ == '__main__':
+    train_file = 'swedish_talbanken05_train.conll'
+    test_file = 'swedish_talbanken05_test_blind.conll'
+    X_train, y_train = calc(train_file)
+    X_test, y_test = calc(test_file)
+
+
+    # Vectorize the feature matrix and carry out a one-hot encoding
+    le = preprocessing.LabelEncoder()
+    y = le.fit_transform(y_train)
+    vec = DictVectorizer(sparse=True)
+    X = vec.fit_transform(X_train)
+
+    print("Training the model...")
+    classifier = linear_model.LogisticRegression(penalty='l2', dual=True, solver='liblinear')
+    model = classifier.fit(X, y)
+    print("predicting...")
+    y_pred = model.predict(X)
+    accuracy = metrics.accuracy_score(y, y_pred)
+    print("Accuracy on train {0}".format(accuracy))
+    X_test = le.fit_transform(X_train)
+    y_test = vec.fit_transform(X_train)
+    y_pred = model.predict(X_test)
+    accuracy = metrics.accuracy_score(y_test,y_pred)
+    print("Accuracy on test {0}".format(accuracy))
