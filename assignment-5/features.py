@@ -16,8 +16,7 @@ def extract(stack, queue, graph, feature_names, sentence):
 
     features.append(transition.can_reduce(stack, graph))
     features.append(transition.can_leftarc(stack, graph))
-    stack, queue, graph, action = reference(stack, queue, graph)
-    return features, action, stack, queue, graph
+    return features
 
 train_file = 'swedish_talbanken05_train.conll'
 test_file = 'swedish_talbanken05_test_blind.conll'
@@ -46,7 +45,8 @@ for sentence in formatted_corpus:
     graph['deprels'] = {}
     graph['deprels']['0'] = 'ROOT'
     while queue:
-        features, action, stack, queue, graph = extract(stack, queue, graph, feature_names, sentence)
+        features = extract(stack, queue, graph, feature_names, sentence)
+        stack, queue, graph, action = reference(stack, queue, graph)
         y.append(action)
         X.append(features)
     stack, graph = transition.empty_stack(stack, graph)

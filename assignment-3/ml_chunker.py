@@ -149,7 +149,6 @@ def predict(test_sentences, feature_names, f_out):
         rows = test_sentence.splitlines()
         rows = [rows[i] + ' ' + y_test_predicted_symbols[i] for i in range(len(rows))]
         for row in rows:
-            print(row)
             f_out.write(row + '\n')
         f_out.write('\n')
     f_out.close()
