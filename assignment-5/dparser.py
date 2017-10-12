@@ -89,6 +89,7 @@ def parse(file, save_as, num_features):
         while queue:
             feat = features.extract(stack, queue, graph, feature_names, sentence)
             stack, queue, graph, trans = reference(stack, queue, graph)
+
             X.append(feat)
             y.append(trans)
 
@@ -104,6 +105,7 @@ def parse(file, save_as, num_features):
 if __name__ == '__main__':
     train_file = 'swedish_talbanken05_train.conll'
     test_file = 'swedish_talbanken05_test.conll'
+
 
     feature_lengths = [8]
     for num_features in feature_lengths:

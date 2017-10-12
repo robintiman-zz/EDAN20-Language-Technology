@@ -123,7 +123,7 @@ def triplets(sentences):
 if __name__ == '__main__':
     column_names_2006 = ['id', 'form', 'lemma', 'cpostag', 'postag', 'feats', 'head', 'deprel', 'phead', 'pdeprel']
 
-    test_file = 'talbanken.txt'
+    test_file = '../corpus/swedish_talbanken05_train.conll'
     sentences = read_sentences(test_file)
     new_sentences = split_rows(sentences, column_names_2006)
     pairs_in_corpus = pairs(new_sentences)

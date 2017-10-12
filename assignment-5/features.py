@@ -1,5 +1,6 @@
 import transition
 
+
 def extract(stack, queue, graph, feature_names, sentence):
     features = {}
     for feature in feature_names:
@@ -13,6 +14,7 @@ def extract(stack, queue, graph, feature_names, sentence):
     return features
 
 # ("sentence", ("stack", 0, "id"), "postag", "stack0_fw_POS"),
+
 
 def get_params(feature, stack, queue, sentence):
     index = feature[1]
