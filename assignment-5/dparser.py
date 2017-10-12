@@ -105,7 +105,7 @@ if __name__ == '__main__':
     train_file = 'swedish_talbanken05_train.conll'
     test_file = 'swedish_talbanken05_test.conll'
 
-    feature_lengths = [4, 8, 12]
+    feature_lengths = [8]
     for num_features in feature_lengths:
         X_train, y_train = parse(train_file, "train_" + str(num_features), num_features)
         X_test, y_test = parse(test_file, "test_" + str(num_features), num_features)
@@ -116,7 +116,7 @@ if __name__ == '__main__':
         X = vec.fit_transform(X_train)
 
         print("Training the model...")
-        classifier = linear_model.LogisticRegression(penalty='l2', dual=True, solver='liblinear')
+        classifier = linear_model.LogisticRegression(penalty='l2', dual=True, solver='liblinear', n_jobs=-1)
         classifier = classifier.fit(X, y)
 
         print("Saving model...")
@@ -127,7 +127,7 @@ if __name__ == '__main__':
         y_pred = classifier.predict(X)
         print(classification_report(y, y_pred))
 
-        X_test = le.fit_transform(X_train)
-        y_test = vec.fit_transform(X_train)
-        y_pred = classifier.predict(X_test)
-        print(classification_report(y_test, y_pred))
+        y = le.fit_transform(y_test)
+        X = vec.fit_transform(X_test)
+        y_pred = classifier.predict(X)
+        print(classification_report(y, y_pred))
