@@ -51,11 +51,24 @@ def reference(stack, queue, graph):
     stack, queue, graph = transition.shift(stack, queue, graph)
     return stack, queue, graph, 'sh'
 
-# TODO denna behöver nog mer kärlek
 def parse_ml(stack, queue, graph, trans):
     if stack and trans[:2] == 'ra':
         stack, queue, graph = transition.right_arc(stack, queue, graph, trans[3:])
         return stack, queue, graph, 'ra'
+    # Left arc
+    if stack and trans[:2] == 'la':
+        stack, queue, graph = transition.left_arc(stack, queue, graph, trans[3:])
+        return stack, queue, graph, 'la'
+
+    # Reduce
+    if stack and trans[:2] == 're':
+        stack, queue, graph = transition.reduce(stack, queue, graph)
+        return stack, queue, graph, 're'
+
+    #shift
+    stack, queue, graph = transition.shift(stack, queue, graph)
+    return stack, queue, graph, 'sh'
+
 
 
 def calc(file, model=None, le=None, vec=None):
@@ -94,9 +107,8 @@ def calc(file, model=None, le=None, vec=None):
                 encode_feat = vec.transform(feat)
                 trans_nr = classifier.predict(encode_feat)
                 trans = le.inverse_transform(trans_nr)
-
-            stack, queue, graph, trans = parse_ml(stack, queue, graph, trans)
-            transitions.append(trans)
+                stack, queue, graph, trans = parse_ml(stack, queue, graph, trans)
+                transitions.append(trans)
 
             X_dict.append(feat)
             y_dict.append(trans)
