@@ -7,7 +7,7 @@ __author__ = "Pierre Nugues"
 from sklearn import preprocessing
 from sklearn.feature_extraction import DictVectorizer
 from sklearn import linear_model
-from sklearn import metrics
+from sklearn.metrics import classification_report
 
 import features
 import transition
@@ -117,13 +117,17 @@ if __name__ == '__main__':
 
         print("Training the model...")
         classifier = linear_model.LogisticRegression(penalty='l2', dual=True, solver='liblinear')
-        model = classifier.fit(X, y)
+        classifier = classifier.fit(X, y)
+
+        print("Saving model...")
+        with open("model_" + str(num_features), "wb") as f:
+            pickle.dump(classifier, f)
+
         print("predicting...")
-        y_pred = model.predict(X)
-        accuracy = metrics.accuracy_score(y, y_pred)
-        print("Accuracy on train {0}".format(accuracy))
+        y_pred = classifier.predict(X)
+        print(classification_report(y, y_pred))
+
         X_test = le.fit_transform(X_train)
         y_test = vec.fit_transform(X_train)
-        y_pred = model.predict(X_test)
-        accuracy = metrics.accuracy_score(y_test,y_pred)
-        print("Accuracy on test {0}".format(accuracy))
+        y_pred = classifier.predict(X_test)
+        print(classification_report(y_test, y_pred))
