@@ -116,14 +116,11 @@ if __name__ == '__main__':
         y = le.fit_transform(y_train)
         vec = DictVectorizer(sparse=True)
         X = vec.fit_transform(X_train)
+        classifier = None
 
-        print("Training the model...")
-        classifier = linear_model.LogisticRegression(penalty='l2', dual=True, solver='liblinear', n_jobs=-1)
-        classifier = classifier.fit(X, y)
-
-        print("Saving model...")
-        with open("model_" + str(num_features), "wb") as f:
-            pickle.dump(classifier, f)
+        print("Loading the model...")
+        with open("../assingmnet-5/model_" + str(num_features), "r") as f:
+            pickle.load(classifier, f)
 
         print("predicting...")
         y_pred = classifier.predict(X)

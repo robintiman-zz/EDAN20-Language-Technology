@@ -1,52 +1,32 @@
-from sklearn.linear_model import LogisticRegression
-from dparser import reference
 import transition
-import conll
+
 
 def extract(stack, queue, graph, feature_names, sentence):
-    features = []
+    features = {}
     for feature in feature_names:
-        stack_or_queue = eval(feature[0])
-        index = feature[1]
-        tag = feature[2]
+        index, name, data, tag = get_params(feature, stack, queue, sentence)
         try:
-            features.append(stack_or_queue[index][tag])
+            features[name] = data[index][tag]
         except IndexError:
-            features.append("nil")
-
-    features['can_reduce'] = str(transition.can_reduce(stack, graph))
-    features['can_leftarc'] = str(transition.can_leftarc(stack, graph))
+            features[name] = "nil"
+    features["can-re"] = transition.can_reduce(stack, graph)
+    features["can-la"] = transition.can_leftarc(stack, graph)
     return features
 
-train_file = 'swedish_talbanken05_train.conll'
-test_file = 'swedish_talbanken05_test_blind.conll'
-column_names_2006 = ['id', 'form', 'lemma', 'cpostag', 'postag', 'feats', 'head', 'deprel', 'phead', 'pdeprel']
-column_names_2006_test = ['id', 'form', 'lemma', 'cpostag', 'postag', 'feats']
-feature_names = [("stack", 0, "postag"), ("stack", 1 ,"postag"), ("stack", 0, "form"), ("stack", 1, "form"),
-                 ("queue", 0, "postag"), ("queue", 1, "postag"), ("queue", 0, "form"), ("queue", 1, "form")]
-                 # "can_re", "can_la"]
+# ("sentence", ("stack", 0, "id"), "postag", "stack0_fw_POS"),
 
-sentences = conll.read_sentences(train_file)
-formatted_corpus = conll.split_rows(sentences, column_names_2006)
 
-sent_cnt = 0
-X = []
-y = []
-for sentence in formatted_corpus:
-    sent_cnt += 1
-    if sent_cnt % 1000 == 0:
-        print(sent_cnt, 'sentences of', len(formatted_corpus), flush=True)
-        break
-    stack = []
-    queue = list(sentence)
-    graph = {}
-    graph['heads'] = {}
-    graph['heads']['0'] = '0'
-    graph['deprels'] = {}
-    graph['deprels']['0'] = 'ROOT'
-    while queue:
-        features = extract(stack, queue, graph, feature_names, sentence)
-        stack, queue, graph, action = reference(stack, queue, graph)
-        y.append(action)
-        X.append(features)
-    stack, graph = transition.empty_stack(stack, graph)
+def get_params(feature, stack, queue, sentence):
+    index = feature[1]
+    if not isinstance(index, int):
+        data_t = eval(index[0])
+        tag_t = index[2]
+        index_t = index[1]
+        try:
+            index = int(data_t[index_t][tag_t])
+        except IndexError:
+            index = -1
+    data = eval(feature[0])
+    tag = feature[2]
+    name = feature[3]
+    return index, name, data, tag
