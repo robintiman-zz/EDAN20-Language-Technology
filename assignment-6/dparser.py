@@ -66,7 +66,7 @@ def parse_ml(stack, queue, graph, trans):
     return stack, queue, graph, 'sh'
 
 
-def parse(file, save_as,num_features = None, classifier=None, le=None, vec=None):
+def parse(file, save_as,num_features=None, classifier=None, le=None, vec=None):
     column_names_2006 = ['id', 'form', 'lemma', 'cpostag', 'postag', 'feats', 'head', 'deprel', 'phead', 'pdeprel']
     column_names_2006_test = ['id', 'form', 'lemma', 'cpostag', 'postag', 'feats']
 
@@ -82,13 +82,17 @@ def parse(file, save_as,num_features = None, classifier=None, le=None, vec=None)
 
     feature_names = feature_names[:num_features]
 
-    sentences = conll.read_sentences(train_file)
-    formatted_corpus = conll.split_rows(sentences, column_names_2006)
+    sentences = conll.read_sentences(file)
+    if classifier is None or vec is None or le is None:
+        formatted_corpus = conll.split_rows(sentences, column_names_2006)
+    else:
+        formatted_corpus = conll.split_rows(sentences, column_names_2006_test)
 
     sent_cnt = 0
     X = []
     y = []
 
+    predicted_corpus = []
     for sentence in formatted_corpus:
         sent_cnt += 1
         if sent_cnt % 1000 == 0:
@@ -107,11 +111,12 @@ def parse(file, save_as,num_features = None, classifier=None, le=None, vec=None)
                 feat = features.extract(stack, queue, graph, feature_names, sentence)
                 stack, queue, graph, trans = reference(stack, queue, graph)
             else:
-                feat = features.extract(stack, queue, graph, [], sentence)
+                feat = features.extract(stack, queue, graph, feature_names, sentence)
                 encode_feat = vec.transform(feat)
                 trans_nr = classifier.predict(encode_feat)
                 trans = le.inverse_transform(trans_nr)
                 stack, queue, graph, trans = parse_ml(stack, queue, graph, trans)
+
             X.append(feat)
             y.append(trans)
 
@@ -120,24 +125,39 @@ def parse(file, save_as,num_features = None, classifier=None, le=None, vec=None)
 
         # Poorman's projectivization to have well-formed graphs.
         for word in sentence:
-            word['head'] = graph['heads'][word['id']]
 
-    with open("output{0}.txt".format(feature_lengths), "wb") as f:
-        pickle.dump(sentence, f)
+            try:
+                word['head'] = graph['heads'][word['id']]
+                word['phead'] = graph['heads'][word['id']]
+            except KeyError:
+                word['head'] = '_'
+                word['phead'] = '_'
+
+            try:
+                word['deprel'] = graph['deprels'][word['id']]
+                word['pdeprel'] = graph['pdeprel'][word['id']]
+            except KeyError:
+                word['deprel'] = '_'
+                word['pdeprel'] = '_'
+
+        predicted_corpus.append(sentence)
+
+    conll.save("{0}.txt".format(save_as), predicted_corpus, column_names_2006)
+
     return X, y
 
 
 if __name__ == '__main__':
 
-    feature_lengths = [4, 8, 12]
+    feature_lengths = [4]
     for num_features in feature_lengths:
         train_file = 'swedish_talbanken05_train.conll'
         test_file = 'swedish_talbanken05_test_blind.conll'
         X_train, y_train = parse(train_file, "train_" + str(num_features), num_features)
         le = preprocessing.LabelEncoder()
-        y = le.fit_transform(y_train)
+        le.fit_transform(y_train)
         vec = DictVectorizer(sparse=True)
-        X = vec.fit_transform(X_train)
+        vec.fit_transform(X_train)
 
         print("Loading model...")
         with open("../assignment-5/model_" + str(num_features), "rb") as f:
