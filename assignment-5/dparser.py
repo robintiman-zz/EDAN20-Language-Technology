@@ -8,12 +8,11 @@ from sklearn import preprocessing
 from sklearn.feature_extraction import DictVectorizer
 from sklearn import linear_model
 from sklearn.metrics import classification_report
-
+import sys
 import features
 import transition
 import conll
 import pickle
-
 
 
 def reference(stack, queue, graph):
@@ -62,10 +61,10 @@ def parse(file, save_as, num_features):
                      ("stack", 1, "postag", "stack1_POS"), ("stack", 1, "form", "stack1_word"),
                      ("queue", 1, "postag", "queue1_POS"), ("queue", 1, "form", "queue1_word"),
                      # Here the index is in id or head
-                     ("sentence", ("stack", 0, "id"), "postag", "stack0_fw_POS"),
-                     ("sentence", ("stack", 0, "id"), "form", "stack0_fw_word"),
-                     ("sentence", ("stack", 1, "head"), "postag", "stack0_head_POS"),
-                     ("sentence", ("stack", 1, "head"), "form", "stack0_head_word")]
+                     ("sentence", (("stack", 0, "id"), 0), "postag", "stack0_POS"),
+                     ("sentence", (("stack", 0, "id"), 0), "form", "stack0_word"),
+                     ("sentence", (("stack", 0, "id"), 1), "postag", "stack0_fw_POS")]
+                     # ("sentence", (("stack", 0, "id"), 1), "form", "stack0_fw_word")]
 
     feature_names = feature_names[:num_features]
 
@@ -92,6 +91,11 @@ def parse(file, save_as, num_features):
 
             X.append(feat)
             y.append(trans)
+        stack, graph = transition.empty_stack(stack, graph)
+        # Poorman's projectivization to have well-formed graphs.
+        for word in sentence:
+            word['head'] = graph['heads'][word['id']]
+
 
     with open("X_{}.data".format(save_as), "wb") as f:
         pickle.dump(X, f)
@@ -102,31 +106,38 @@ def parse(file, save_as, num_features):
     return X, y
 
 
+def save_file(file_name, obj):
+    with open(file_name, "wb") as f:
+        pickle.dump(obj, f)
+
 if __name__ == '__main__':
+    do_parsing = True
     train_file = 'swedish_talbanken05_train.conll'
     test_file = 'swedish_talbanken05_test.conll'
+    num_features = int(sys.argv[1])
+    if do_parsing:
+        X_train, y = parse(train_file, "train_" + str(num_features), num_features)
+    else:
+        with open("X_train_{}.data".format(num_features), "rb") as f:
+            X_train = pickle.load(f)
+        with open("y_train_{}.data".format(num_features), "rb") as f:
+            y = pickle.load(f)
 
+    vec = DictVectorizer(sparse=True)
+    X = vec.fit_transform(X_train)
 
-    feature_lengths = [8]
-    for num_features in feature_lengths:
-        X_train, y_train = parse(train_file, "train_" + str(num_features), num_features)
-        X_test, y_test = parse(test_file, "test_" + str(num_features), num_features)
-        # Vectorize the feature matrix and carry out a one-hot encoding
-        le = preprocessing.LabelEncoder()
-        y = le.fit_transform(y_train)
-        vec = DictVectorizer(sparse=True)
-        X = vec.fit_transform(X_train)
-        classifier = None
+    save_file("vec_{}".format(num_features), vec)
 
-        print("Loading the model...")
-        with open("../assingmnet-5/model_" + str(num_features), "r") as f:
-            pickle.load(classifier, f)
+    print("Training model...")
+    classifier = linear_model.LogisticRegression(penalty='l2', dual=True, solver='liblinear')
+    model = classifier.fit(X, y)
 
-        print("predicting...")
-        y_pred = classifier.predict(X)
-        print(classification_report(y, y_pred))
+    print("Predicting..")
+    y_pred = classifier.predict(X)
+    print(classification_report(y, y_pred))
 
-        y = le.fit_transform(y_test)
-        X = vec.fit_transform(X_test)
-        y_pred = classifier.predict(X)
-        print(classification_report(y, y_pred))
+    print("Saving model..")
+    with open("othermodel_" + str(num_features), "wb") as f:
+        pickle.dump(classifier, f)
+
+    print("Done!")
