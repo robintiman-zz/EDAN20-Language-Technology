@@ -14,7 +14,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn import tree
 from sklearn.naive_bayes import GaussianNB
 from sklearn.grid_search import GridSearchCV
-
+import pickle
 
 def extract_features(sentences, w_size, feature_names):
     """
@@ -64,11 +64,9 @@ def extract_features_sent(sentence, w_size, feature_names):
     # y is the list of classes
     X = list()
     y = list()
-    feature_line = list()
     for i in range(len(padded_sentence) - 2 * w_size):
         # x is a row of X
         x = list()
-        feature_line = list()
         # The words in lower case
         for j in range(2 * w_size + 1):
             x.append(padded_sentence[i + j][0].lower())
@@ -78,6 +76,7 @@ def extract_features_sent(sentence, w_size, feature_names):
         # The chunks (Up to the word)
         for j in range(w_size):
             x.append(padded_sentence[i + j][2])
+
         # We represent the feature vector as a dictionary
         X.append(dict(zip(feature_names, x)))
         # The classes are stored in a list
@@ -155,12 +154,13 @@ def predict(test_sentences, feature_names, f_out):
 
 
 if __name__ == '__main__':
+    do_train = True
     start_time = time.clock()
     train_corpus = 'train.txt'
     test_corpus = 'test.txt'
     w_size = 2  # The size of the context window to the left and right of the word
     feature_names = ['word_n2', 'word_n1', 'word', 'word_p1', 'word_p2',
-                    'pos_n2', 'pos_n1', 'pos', 'pos_p1', 'pos_p2', "c1", "c2"]
+                    'pos_n2', 'pos_n1', 'pos', 'pos_p1', 'pos_p2', "c2", "c1"]
 
     train_sentences = conll_reader.read_sentences(train_corpus)
 
@@ -179,11 +179,15 @@ if __name__ == '__main__':
 
     training_start_time = time.clock()
     print("Training the model...")
-    classifier = linear_model.LogisticRegression(penalty='l2', dual=True, solver='liblinear')
-    # classifier = KNeighborsClassifier()
-    # classifier = RandomForestClassifier()
-    model = classifier.fit(X, y)
-    print(model)
+    if do_train:
+        classifier = linear_model.LogisticRegression(penalty='l2', dual=True, solver='liblinear')
+        # classifier = KNeighborsClassifier()
+        # classifier = RandomForestClassifier()
+        classifier = classifier.fit(X, y)
+        pickle.dump(classifier, open("model", "wb"))
+    else:
+        classifier = pickle.load(open("model", "rb"))
+    print(classifier)
 
     test_start_time = time.clock()
     # We apply the model to the test set
@@ -211,3 +215,4 @@ if __name__ == '__main__':
     end_time = time.clock()
     print("Training time:", (test_start_time - training_start_time) / 60)
     print("Test time:", (end_time - test_start_time) / 60)
+
