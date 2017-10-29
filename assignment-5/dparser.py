@@ -61,10 +61,10 @@ def parse(file, save_as, num_features):
                      ("stack", 1, "postag", "stack1_POS"), ("stack", 1, "form", "stack1_word"),
                      ("queue", 1, "postag", "queue1_POS"), ("queue", 1, "form", "queue1_word"),
                      # Here the index is in id or head
-                     ("sentence", (("stack", 0, "id"), 0), "postag", "stack0_POS"),
-                     ("sentence", (("stack", 0, "id"), 0), "form", "stack0_word"),
-                     ("sentence", (("stack", 0, "id"), 1), "postag", "stack0_fw_POS")]
-                     # ("sentence", (("stack", 0, "id"), 1), "form", "stack0_fw_word")]
+                     ("sentence", (("stack", 0, "id"), 1), "postag", "sent_fw_POS"),
+                     ("sentence", (("stack", 0, "id"), 1), "form", "sent_fw_word"),
+                     ("sentence", (("queue", 0, "id"), -1), "postag", "stack0_head_POS"),
+                     ("sentence", (("queue", 0, "id"), -1), "form", "stack0_head_word")]
 
     feature_names = feature_names[:num_features]
 
@@ -77,7 +77,7 @@ def parse(file, save_as, num_features):
     for sentence in formatted_corpus:
         sent_cnt += 1
         if sent_cnt % 1000 == 0:
-            print(sent_cnt, 'sentences on', len(formatted_corpus), flush=True)
+            print(sent_cnt, 'sentences of', len(formatted_corpus), flush=True)
         stack = []
         queue = list(sentence)
         graph = {}
@@ -95,7 +95,9 @@ def parse(file, save_as, num_features):
         # Poorman's projectivization to have well-formed graphs.
         for word in sentence:
             word['head'] = graph['heads'][word['id']]
-
+        if not transition.equal_graphs(sentence, graph):
+            print(sentence)
+            print(graph)
 
     with open("X_{}.data".format(save_as), "wb") as f:
         pickle.dump(X, f)
@@ -112,11 +114,13 @@ def save_file(file_name, obj):
 
 if __name__ == '__main__':
     do_parsing = True
+    do_save = True
     train_file = 'swedish_talbanken05_train.conll'
     test_file = 'swedish_talbanken05_test.conll'
     num_features = int(sys.argv[1])
     if do_parsing:
         X_train, y = parse(train_file, "train_" + str(num_features), num_features)
+        X_test, y_test = parse(test_file, "test_" + str(num_features), num_features)
     else:
         with open("X_train_{}.data".format(num_features), "rb") as f:
             X_train = pickle.load(f)
@@ -136,8 +140,9 @@ if __name__ == '__main__':
     y_pred = classifier.predict(X)
     print(classification_report(y, y_pred))
 
-    print("Saving model..")
-    with open("othermodel_" + str(num_features), "wb") as f:
-        pickle.dump(classifier, f)
+    if do_save:
+        print("Saving model..")
+        with open("othermodel_" + str(num_features), "wb") as f:
+            pickle.dump(classifier, f)
 
     print("Done!")

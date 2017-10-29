@@ -14,12 +14,11 @@ feature_names = [("stack", 0, "postag", "stack0_POS"), ("queue", 0, "postag", "q
                  ("stack", 1, "postag", "stack1_POS"), ("stack", 1, "form", "stack1_word"),
                  ("queue", 1, "postag", "queue1_POS"), ("queue", 1, "form", "queue1_word"),
                  # Here the index is in id or head
-                 ("sentence", (("stack", 0, "id"), 0), "postag", "stack0_POS"),
-                 ("sentence", (("stack", 0, "id"), 0), "form", "stack0_word"),
-                 ("sentence", (("stack", 0, "id"), 1), "postag", "stack0_fw_POS")]
+                 ("sentence", (("stack", 0, "id"), 1), "postag", "sent_fw_POS"),
+                 ("sentence", (("stack", 0, "id"), 1), "form", "sent_fw_word"),
+                 ("sentence", (("queue", 0, "id"), -1), "postag", "stack0_head_POS"),
+                 ("sentence", (("queue", 0, "id"), -1), "form", "stack0_head_word")]
 
-
-# ("sentence", (("stack", 0, "id"), 1), "form", "stack0_fw_word")]
 
 
 def parse_ml(stack, queue, graph, trans):

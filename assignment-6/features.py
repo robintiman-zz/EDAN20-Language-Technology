@@ -11,7 +11,8 @@ def extract(stack, queue, graph, feature_names, sentence):
             features[name] = "nil"
     features["can-re"] = transition.can_reduce(stack, graph)
     features["can-la"] = transition.can_leftarc(stack, graph)
-    features["can-ra"] = transition.can_rightarc(stack)
+    if len(feature_names) > 10:
+        features["can-ra"] = transition.can_rightarc(stack)
     return features
 
 # ("sentence", ("stack", 0, "id"), "postag", "stack0_fw_POS"),
